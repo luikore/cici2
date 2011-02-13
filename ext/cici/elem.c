@@ -15,31 +15,29 @@
 DECL0(pos) {
 	HWND h = VALUE2HWND(self);
 	RECT r;
-	if (!GetWindowRect(h, &r)) {
-		return rb_ary_new();
-	} else {
+	if (GetWindowRect(h, &r)) {
 		POINT pt = {r.left, r.top};
 		ScreenToClient(GetParent(h), &pt);
 		return rb_ary_new3(2, INT2NUM(pt.x), INT2NUM(pt.y));
+	} else {
+		return rb_ary_new();
 	}
 }
 
 DECL0(absolute_pos) {
 	HWND h = VALUE2HWND(self);
 	RECT r;
-	if (!GetWindowRect(h, &r)) {
-		return rb_ary_new();
-	} else {
+	if (GetWindowRect(h, &r)) {
 		return rb_ary_new3(2, INT2NUM(r.left), INT2NUM(r.top));
+	} else {
+		return rb_ary_new();
 	}
 }
 
 DECL1(pos_eq, pos_ary) {
 	HWND h = VALUE2HWND(self);
 	RECT r;
-	if (!GetWindowRect(h, &r)) {
-		return pos_ary;
-	} else {
+	if (GetWindowRect(h, &r)) {
 		POINT pt = {r.left, r.top};
 		VALUE vx = rb_ary_entry(pos_ary, 0);
 		VALUE vy = rb_ary_entry(pos_ary, 1);
@@ -51,16 +49,14 @@ DECL1(pos_eq, pos_ary) {
 			pt.y = NUM2INT(vy);
 
 		ELEMENT_SETPOS(h, pt.x, pt.y);
-		return pos_ary;
 	}
+	return pos_ary;
 }
 
 DECL1(absolute_pos_eq, pos_ary) {
 	HWND h = VALUE2HWND(self);
 	RECT r;
-	if (!GetWindowRect(h, &r)) {
-		return pos_ary;
-	} else {
+	if (GetWindowRect(h, &r)) {
 		POINT pt = {r.left, r.top};
 		VALUE vx = rb_ary_entry(pos_ary, 0);
 		VALUE vy = rb_ary_entry(pos_ary, 1);
@@ -72,13 +68,14 @@ DECL1(absolute_pos_eq, pos_ary) {
 		ScreenToClient(GetParent(h), &pt);
 
 		ELEMENT_SETPOS(h, pt.x, pt.y);
-		return pos_ary;
 	}
+	return pos_ary;
 }
 
 DECL0(size) {
+	HWND h = VALUE2HWND(self);
 	RECT r;
-	if (GetWindowRect(VALUE2HWND(self), &r)) {
+	if (GetWindowRect(h, &r)) {
 		return rb_ary_new3(2, INT2NUM(r.right  - r.left), INT2NUM(r.bottom - r.top));
 	} else {
 		return rb_ary_new();
@@ -104,8 +101,9 @@ DECL1(size_eq, sz_ary) {
 }
 
 DECL0(client_size) {
+	HWND h = VALUE2HWND(self);
 	RECT r;
-	if (GetClientRect(VALUE2HWND(self), &r)) {
+	if (GetClientRect(h, &r)) {
 		return rb_ary_new3(2, INT2NUM(r.right), INT2NUM(r.bottom));
 	} else {
 		return Qnil;

@@ -1,0 +1,24 @@
+elem.style should support these properties:
+
+border:
+margin:
+padding:
+width:
+height:
+
+position: fixed, static{, relative}
+float: left,right
+clear: both,left,right
+
+z_index:
+
+color:
+
+background_color:
+background_image:
+
+font_face: xxo
+font_style: normal, bold, italic, underline & line-through here
+font_size: 14
+
+TO READ: type-setting engine for html.

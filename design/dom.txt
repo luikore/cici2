@@ -1,0 +1,14 @@
+dom operations should act like jquery:
+
+e.children
+e.find 'selector'=nil
+e.parent
+e.ancestor 'selector'=nil
+
+e.append
+e.remove
+
+Cici.find 'selector'
+
+selector should be 'button', 'button#x'
+set the id property of elem
