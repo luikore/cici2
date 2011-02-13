@@ -10,7 +10,7 @@ typedef struct {
 	WNDPROC old_proc;
 } Elem;
 
-inline HWND VALUE2HWND(VALUE v) {
+static inline HWND VALUE2HWND(VALUE v) {
 	Elem* elem;
 	Data_Get_Struct(v, Elem, elem);
 	return elem ? elem->h : 0;

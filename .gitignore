@@ -2,6 +2,6 @@
 *.obj
 *.pdb
 *.so
-ext-i386-mswin32*.*
+ext-i386-*
 Makefile
 experiment

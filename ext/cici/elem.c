@@ -3,13 +3,8 @@
 #include <runtime.h>
 #include <stdlib.h>
 
-// get hwnd
-DECL0(h) {
-	return INT2NUM((int)VALUE2HWND(self));
-}
-
 // -----------------------------------------------------------------------------
-// pos functions
+// pos methods
 
 #define ELEMENT_RESIZE(h, cx, cy) \
 	(SetWindowPos((h), 0, 0, 0, (cx), (cy), SWP_NOMOVE | SWP_NOZORDER))
@@ -20,7 +15,7 @@ DECL0(h) {
 DECL0(pos) {
 	HWND h = VALUE2HWND(self);
 	RECT r;
-	if(!GetWindowRect(h, &r)) {
+	if (!GetWindowRect(h, &r)) {
 		return rb_ary_new();
 	} else {
 		POINT pt = {r.left, r.top};
@@ -32,18 +27,17 @@ DECL0(pos) {
 DECL0(absolute_pos) {
 	HWND h = VALUE2HWND(self);
 	RECT r;
-	if(!GetWindowRect(h, &r)) {
+	if (!GetWindowRect(h, &r)) {
 		return rb_ary_new();
 	} else {
-		POINT pt = {r.left, r.top};
-		return rb_ary_new3(2, INT2NUM(pt.x), INT2NUM(pt.y));
+		return rb_ary_new3(2, INT2NUM(r.left), INT2NUM(r.top));
 	}
 }
 
 DECL1(pos_eq, pos_ary) {
 	HWND h = VALUE2HWND(self);
 	RECT r;
-	if(!GetWindowRect(h, &r)) {
+	if (!GetWindowRect(h, &r)) {
 		return pos_ary;
 	} else {
 		POINT pt = {r.left, r.top};
@@ -51,9 +45,9 @@ DECL1(pos_eq, pos_ary) {
 		VALUE vy = rb_ary_entry(pos_ary, 1);
 
 		ScreenToClient(GetParent(h), &pt);
-		if(vx != Qnil)
+		if (vx != Qnil)
 			pt.x = NUM2INT(vx);
-		if(vy != Qnil)
+		if (vy != Qnil)
 			pt.y = NUM2INT(vy);
 
 		ELEMENT_SETPOS(h, pt.x, pt.y);
@@ -64,7 +58,7 @@ DECL1(pos_eq, pos_ary) {
 DECL1(absolute_pos_eq, pos_ary) {
 	HWND h = VALUE2HWND(self);
 	RECT r;
-	if(!GetWindowRect(h, &r)) {
+	if (!GetWindowRect(h, &r)) {
 		return pos_ary;
 	} else {
 		POINT pt = {r.left, r.top};
@@ -84,7 +78,7 @@ DECL1(absolute_pos_eq, pos_ary) {
 
 DECL0(size) {
 	RECT r;
-	if( GetWindowRect(VALUE2HWND(self), &r) ) {
+	if (GetWindowRect(VALUE2HWND(self), &r)) {
 		return rb_ary_new3(2, INT2NUM(r.right  - r.left), INT2NUM(r.bottom - r.top));
 	} else {
 		return rb_ary_new();
@@ -94,16 +88,12 @@ DECL0(size) {
 DECL1(size_eq, sz_ary) {
 	HWND h = VALUE2HWND(self);
 	RECT r;
-	if(!h) {
-		rb_raise(rb_eRuntimeError, "it is not a window");
-		return Qnil;
-	}
-	if(TYPE(sz_ary) != T_ARRAY) {
+	if (TYPE(sz_ary) != T_ARRAY) {
 		rb_raise(rb_eRuntimeError, "please give an array");
 		return Qnil;
 	}
 
-	if( GetWindowRect(h, &r) ) {
+	if (GetWindowRect(h, &r)) {
 		VALUE vcx = rb_ary_entry(sz_ary, 0);
 		VALUE vcy = rb_ary_entry(sz_ary, 1);
 		int cx = (RTEST(vcx)) ? NUM2INT(vcx) : (r.right - r.left);
@@ -115,7 +105,7 @@ DECL1(size_eq, sz_ary) {
 
 DECL0(client_size) {
 	RECT r;
-	if( GetClientRect(VALUE2HWND(self), &r) ) {
+	if (GetClientRect(VALUE2HWND(self), &r)) {
 		return rb_ary_new3(2, INT2NUM(r.right), INT2NUM(r.bottom));
 	} else {
 		return Qnil;
@@ -123,10 +113,16 @@ DECL0(client_size) {
 }
 
 DECL4(displace, x, y, cx, cy) {
-	HWND h = VALUE2HWND(self);
-	SetWindowPos(h, 0,
+	SetWindowPos(VALUE2HWND(self), 0,
 		NUM2INT(x), NUM2INT(y), NUM2INT(cx), NUM2INT(cy), SWP_NOZORDER);
 	return self;
+}
+
+// -----------------------------------------------------------------------------
+// other methods
+
+DECL0(h) {
+	return INT2NUM((int)VALUE2HWND(self));
 }
 
 DECL0(show) {
@@ -144,10 +140,28 @@ DECL0(restore) {
 	return self;
 }
 
+DECL0(focus) {
+	SetFocus(VALUE2HWND(self));
+	return self;
+}
+
+DECL0(has_focus) {
+	return (VALUE2HWND(self) == GetFocus()) ? Qtrue : Qfalse;
+}
+
+DECL3(send_msg, code, wp, lp) {
+	return LONG2NUM(SendMessage(VALUE2HWND(self), NUM2UINT(code), NUM2LONG(wp), NUM2LONG(lp)));
+}
+
+DECL0(update) {
+	UpdateWindow(VALUE2HWND(self));
+	return self;
+}
+
 DECL0(text) {
 	HWND h = VALUE2HWND(self);
 	int len = GetWindowTextLength(h);
-	if(len <= 0) {
+	if (len <= 0) {
 		return rb_str_new2("");
 	} else {
 		// TODO test it
@@ -166,24 +180,6 @@ DECL1(text_eq, txt) {
 	return txt;
 }
 
-DECL0(focus) {
-	HWND h = VALUE2HWND(self);
-	SetFocus(h);
-	return self;
-}
-
-DECL0(has_focus) {
-	return (VALUE2HWND(self) == GetFocus()) ? Qtrue : Qfalse;
-}
-
-DECL3(send_msg, code, wp, lp) {
-	return LONG2NUM(SendMessage(VALUE2HWND(self), NUM2UINT(code), NUM2LONG(wp), NUM2LONG(lp)));
-}
-
-DECL0(update) {
-	UpdateWindow(VALUE2HWND(self));
-	return self;
-}
 
 // return a Timer number
 DECL1(set_timer, milisec) {
@@ -208,7 +204,9 @@ DECL1(kill_timer, timer_id) {
 	return rb_funcall(runtime.internal, rb_intern("unregister_timer"), 1, timer_id);
 }
 
-// destroy elem
+// -----------------------------------------------------------------------------
+// memory
+
 static void elem_free(void* ptr) {
 	Elem* elem = (Elem*) ptr;
 	SetWindowLong(elem->h, GWL_USERDATA, 0);
