@@ -1,0 +1,58 @@
+functional vs. prototype based vs. class based
+
+we face 3 options of code reuse mechanics.
+
+functional:
+	def sub_elem()
+		e = sup_elem()
+		e.on :some_event, ->{...}
+		...
+		e
+	end
+	def sub_sub_elem()
+		e = sub_elem()
+		...
+		e
+	end
+functional is simplest, but it should be rerun every time a new elem is called.
+parent behavior on sub_sub_elem is fixed after created.
+if want a little bit properties redefinable, refactor the bit as a middle function.
+if want the bit variable at runtime, use e.on ... .
+
+prototype based:
+	sub_elem = sup_elem.new
+	sub_elem.on :some_event, ->{...}
+	sub_sub_elem = sub_elem.new
+if we lookup sup_elem, sup_elem behavior can be changed after created, allowing various levels.
+if we not lookup sup_elem events and copy events map everytime newed,
+  sup type behavior will be unchangable for sub types.
+
+class based:
+	class SubElem < SupElem
+		def some_event
+		...
+		end
+		...
+	end
+	class SubSubElem < SubElem
+		...
+	end
+	sub_sub_elem = SubSubElem.new
+parent behavior can be changed after created.
+but minor behavior changing at runtime is difficult.
+
+
+we use a hybrid of the above.
+class is used for less memory usage only, and is not recomended in API.
+
+event lookup:
+object @events -> class @events
+
+event binding:
+e.on
+e.unbind  # still calls the class processor
+e.stub    # won't call the class processor
+e.class.on
+e.class.unbind
+
+inheritance is no recommended. define nested methods for user-level reuse.

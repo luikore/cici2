@@ -1,0 +1,47 @@
+The lifecycle of windows
+
+There are two worlds: the C side and the Ruby side.
+When calling rb_eval or rb_funcall or some other Ruby C-ext APIs, we are traveling from the C world to the Ruby world.
+
+The following is a normal window's life:
+
+= create =
+
+A window-object is created in the Ruby code.
+Ruby prepares an event-binding hash.
+Ruby call's C for window creation.
+C creates a struct to store the window infomation.
+C invokes system API CreateWindow.
+C binds event-processing-function to the window.
+C returns the control to Ruby.
+
+= event binding =
+
+Ruby prepare some procs.
+A switch is turned off to stop event-processing-function's Ruby invocations. (We call it event-lock afterwards)
+Ruby puts the procs in the hash.
+Turn on event-lock.
+
+= event trigger =
+
+Check even-lock to see if he can lookup event table, if false, bye.
+Do an st_lookup() with event and handle.
+If proc found, invoke it -- Ruby's turn. (encapsulate in rb_protect)
+
+= event unbinding =
+
+Turn off event-lock. (though we may lose some events)
+Ruby deletes some proc from the hash
+Turn on event-lock.
+
+= destroy =
+
+Turn off event-lock.
+Invoke children's destructors.
+C does destructions.
+Ruby does destructions.
+
+Note: The event-lock has to be global for the whole application. (?)
+Note: Some events are fired right after the window is created, we should treat them separatelly and carefully.
+Note: Doing a st_table.st_lookup() won't get into the Ruby VM.
+

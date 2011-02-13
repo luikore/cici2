@@ -1,0 +1,7 @@
+*.[oa]
+*.obj
+*.pdb
+*.so
+ext-i386-mswin32*.*
+Makefile
+experiment

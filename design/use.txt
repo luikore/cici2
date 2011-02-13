@@ -1,0 +1,17 @@
+Cici.app 'hello world', [100, 30] do |app|
+  app.button 'hello' do
+    app.alert 'world'
+  end
+end
+
+elements
+
+a
+button
+select
+radio
+checkbox
+textarea
+img
+span
+div
